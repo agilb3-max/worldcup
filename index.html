@@ -1,84 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Leaderboard</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Live Leaderboard</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-      margin: 0;
-      padding: 20px;
-    }
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #0b1220;
+    color: white;
+    margin: 0;
+    padding: 12px;
+  }
 
-    h1 {
-      text-align: center;
-    }
+  h1 {
+    text-align: center;
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      background: #1e293b;
-      border-radius: 10px;
-      overflow: hidden;
-    }
+  .table-container {
+    overflow-x: auto;
+  }
 
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+    background: #111827;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  th, td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #1f2937;
+    font-size: 14px;
+  }
+
+  th {
+    background: #0f172a;
+    position: sticky;
+    top: 0;
+  }
+
+  tr:hover {
+    background: #1f2937;
+  }
+
+  /* 🥇 1st place highlight */
+  .first-place {
+    background: linear-gradient(90deg, #facc15, #f59e0b);
+    color: black;
+    font-weight: bold;
+  }
+
+  /* Golden Boot column styling */
+  .golden-boot {
+    font-weight: bold;
+    color: #facc15;
+  }
+
+  .refresh {
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.7;
+    margin-bottom: 10px;
+  }
+
+  @media (max-width: 600px) {
     th, td {
-      padding: 12px;
-      text-align: center;
-      border-bottom: 1px solid #334155;
+      font-size: 12px;
+      padding: 8px;
     }
-
-    th {
-      background: #111827;
-    }
-
-    tr:hover {
-      background: #334155;
-    }
-  </style>
+  }
+</style>
 </head>
 
 <body>
 
-<h1>🏆 Leaderboard</h1>
-<table id="leaderboard"></table>
+<h1>🏆 Live Leaderboard</h1>
+<div class="refresh" id="refreshText">Loading...</div>
+
+<div class="table-container">
+  <table id="leaderboard"></table>
+</div>
 
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQPFnmAZG7QiOJTpcCWUSZQbkN90EAJfJQaf8BacjBBRkNzloun10HnMdLBzFWZt-qU4JHZaVb3I80/pub?gid=1567052873&single=true&output=csv";
+const POINTS_COLUMN_NAME = "Total"; // <-- change if your column is named differently
+const GOLDEN_BOOT_COLUMN = "Golden Boot Projection"; // optional
 
 async function loadLeaderboard() {
-  const response = await fetch(CSV_URL);
-  const data = await response.text();
+  const res = await fetch(CSV_URL + "&cache=" + new Date().getTime());
+  const text = await res.text();
 
-  const rows = data.trim().split("\n").map(r => r.split(","));
+  const rows = text.trim().split("\n").map(r => r.split(","));
+
+  let headers = rows[0];
+  let data = rows.slice(1);
+
+  // Find points column index
+  const pointsIndex = headers.indexOf(POINTS_COLUMN_NAME);
+  const gbIndex = headers.indexOf(GOLDEN_BOOT_COLUMN);
+
+  // Convert rows to objects
+  let players = data.map(row => ({
+    row,
+    points: parseFloat(row[pointsIndex]) || 0
+  }));
+
+  // Sort by points DESC
+  players.sort((a, b) => b.points - a.points);
 
   const table = document.getElementById("leaderboard");
 
-  // Build header
   let html = "<tr>";
-  rows[0].forEach(header => {
-    html += `<th>${header}</th>`;
+
+  headers.forEach(h => {
+    html += `<th>${h}</th>`;
   });
+
   html += "</tr>";
 
-  // Build rows
-  for (let i = 1; i < rows.length; i++) {
-    html += "<tr>";
-    rows[i].forEach(cell => {
-      html += `<td>${cell}</td>`;
+  players.forEach((player, index) => {
+    const row = player.row;
+
+    let rowClass = index === 0 ? "first-place" : "";
+
+    html += `<tr class="${rowClass}">`;
+
+    row.forEach((cell, i) => {
+      let cellClass = "";
+
+      if (i === gbIndex && gbIndex !== -1) {
+        cellClass = "golden-boot";
+      }
+
+      html += `<td class="${cellClass}">${cell}</td>`;
     });
+
     html += "</tr>";
-  }
+  });
 
   table.innerHTML = html;
+
+  document.getElementById("refreshText").innerText =
+    "Last updated: " + new Date().toLocaleTimeString();
 }
 
+// Initial load
 loadLeaderboard();
+
+// Auto refresh every 30 seconds
+setInterval(loadLeaderboard, 30000);
 </script>
 
 </body>
