@@ -1,60 +1,60 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQPFnmAZG7QiOJTpcCWUSZQbkN90EAJfJQaf8BacjBBRkNzloun10HnMdLBzFWZt-qU4JHZaVb3I80/pub?gid=1567052873&single=true&output=csv";
 
-async function loadLeaderboard(){
+async function loadLeaderboard() {
+    try {
+        const response = await fetch(CSV_URL);
+        const csv = await response.text();
 
-    const response = await fetch(CSV_URL);
-    const csv = await response.text();
+        const rows = csv.trim().split("\n").map(r => r.split(","));
 
-    const rows = csv.trim().split("\n");
+        const headers = rows[0].map(h => h.trim());
+        console.log("HEADERS:", headers);
 
-    const headers = rows[0].split(",");
-    console.log(headers);
+        const nameIndex = headers.indexOf("Name");
+        const totalIndex = headers.indexOf("Total");
+        const projectionIndex = headers.indexOf("Golden Boot Projection");
+        const goalsIndex = headers.indexOf("Projected Goals");
 
-    const nameIndex = headers.indexOf("Name");
-    const totalIndex = headers.indexOf("Total");
-    const projectionIndex = headers.indexOf("Golden Boot Projection");
-    const goalsIndex = headers.indexOf("Projected Goals");
+        const data = rows.slice(1)
+            .map(row => ({
+                name: row[nameIndex]?.trim(),
+                total: Number(row[totalIndex]) || 0,
+                projection: row[projectionIndex]?.trim() || "",
+                goals: row[goalsIndex]?.trim() || ""
+            }))
+            .filter(p => p.name);
 
-    const data = rows.slice(1)
-        .map(row => {
-            const cols = row.split(",");
+        data.sort((a, b) => b.total - a.total);
 
-            return {
-                name: cols[nameIndex]?.trim(),
-                total: Number(cols[totalIndex]) || 0,
-                projection: cols[projectionIndex]?.trim(),
-                goals: cols[goalsIndex]?.trim()
-            };
-        })
-        .filter(entry => entry.name);
+        const tbody = document.getElementById("leaderboard");
+        tbody.innerHTML = "";
 
-    data.sort((a,b)=>b.total-a.total);
+        data.forEach((entry, i) => {
+            let rankClass = "";
+            if (i === 0) rankClass = "rank1";
+            else if (i === 1) rankClass = "rank2";
+            else if (i === 2) rankClass = "rank3";
 
-    const tbody = document.getElementById("leaderboard");
-    tbody.innerHTML = "";
+            tbody.innerHTML += `
+                <tr class="${rankClass}">
+                    <td>${i + 1}</td>
+                    <td>${entry.name}</td>
+                    <td class="points">${entry.total}</td>
+                    <td class="projection">${entry.projection}</td>
+                    <td>${entry.goals}</td>
+                </tr>
+            `;
+        });
 
-    data.forEach((entry,index)=>{
+        document.getElementById("updated").innerText =
+            "Last Updated: " + new Date().toLocaleString();
 
-        let rankClass = "";
-
-        if(index === 0) rankClass = "rank1";
-        if(index === 1) rankClass = "rank2";
-        if(index === 2) rankClass = "rank3";
-
-        tbody.innerHTML += `
-        <tr class="${rankClass}">
-            <td>${index+1}</td>
-            <td>${entry.name}</td>
-            <td class="points">${entry.total}</td>
-            <td class="projection">${entry.projection}</td>
-            <td>${entry.goals}</td>
-        </tr>
-        `;
-    });
-
-    document.getElementById("updated").innerText =
-        "Last Updated: " + new Date().toLocaleString();
+    } catch (err) {
+        console.error("ERROR:", err);
+        document.getElementById("updated").innerText =
+            "Error loading leaderboard (check console)";
+    }
 }
 
 loadLeaderboard();
-setInterval(loadLeaderboard,300000);
+setInterval(loadLeaderboard, 300000);
