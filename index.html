@@ -1,177 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Live Leaderboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup Leaderboard</title>
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #0b1220;
-    color: white;
-    margin: 0;
-    padding: 12px;
-  }
 
-  h1 {
-    text-align: center;
-    font-size: 22px;
-    margin-bottom: 10px;
-  }
+body{
+    margin:0;
+    padding:20px;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#08111f;
+    color:white;
+}
 
-  .refresh {
-    text-align: center;
-    font-size: 12px;
-    opacity: 0.7;
-    margin-bottom: 10px;
-  }
+h1{
+    text-align:center;
+    margin-bottom:5px;
+}
 
-  .table-container {
-    overflow-x: auto;
-  }
+.last-update{
+    text-align:center;
+    font-size:12px;
+    opacity:.7;
+    margin-bottom:15px;
+}
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 500px;
-    background: #111827;
-    border-radius: 10px;
-    overflow: hidden;
-  }
+.table-wrap{
+    overflow-x:auto;
+}
 
-  th, td {
-    padding: 10px;
-    text-align: center;
-    border-bottom: 1px solid #1f2937;
-    font-size: 14px;
-  }
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#111827;
+    border-radius:12px;
+    overflow:hidden;
+}
 
-  th {
-    background: #0f172a;
-    position: sticky;
-    top: 0;
-  }
+th{
+    background:#0f172a;
+    padding:12px;
+    font-size:14px;
+}
 
-  tr:hover {
-    background: #1f2937;
-  }
+td{
+    padding:12px;
+    border-bottom:1px solid #1f2937;
+}
 
-  .first-place {
-    background: linear-gradient(90deg, #facc15, #f59e0b);
-    color: black;
-    font-weight: bold;
-  }
+tr:hover{
+    background:#1f2937;
+}
 
-  .golden-boot {
-    font-weight: bold;
-    color: #facc15;
-  }
+.rank{
+    font-weight:bold;
+    width:60px;
+    text-align:center;
+}
 
-  @media (max-width: 600px) {
-    th, td {
-      font-size: 12px;
-      padding: 8px;
+.name{
+    font-weight:bold;
+}
+
+.teams{
+    text-align:left;
+    max-width:500px;
+    line-height:1.4;
+}
+
+.total{
+    font-weight:bold;
+    font-size:16px;
+}
+
+.goldenboot{
+    color:#facc15;
+    font-weight:bold;
+}
+
+.first-place{
+    background:linear-gradient(
+        90deg,
+        #facc15,
+        #f59e0b
+    );
+    color:black;
+    font-weight:bold;
+}
+
+.first-place .goldenboot{
+    color:black;
+}
+
+@media(max-width:768px){
+
+    body{
+        padding:10px;
     }
-  }
+
+    th,
+    td{
+        font-size:12px;
+        padding:8px;
+    }
+
+    .teams{
+        min-width:250px;
+    }
+
+}
+
 </style>
 </head>
 
 <body>
 
-<h1>🏆 Live Leaderboard</h1>
-<div class="refresh" id="refreshText">Loading...</div>
+<h1>🏆 World Cup Leaderboard</h1>
 
-<div class="table-container">
-  <table id="leaderboard"></table>
+<div class="last-update" id="updated">
+Loading...
+</div>
+
+<div class="table-wrap">
+<table id="leaderboard"></table>
 </div>
 
 <script>
 
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQPFnmAZG7QiOJTpcCWUSZQbkN90EAJfJQaf8BacjBBRkNzloun10HnMdLBzFWZt-qU4JHZaVb3I80/pub?gid=1567052873&single=true&output=csv";
-
-// 🔥 Only show these columns (customize if needed)
-const ALLOWED_COLUMNS = [
-  "Name",
-  "Total",
-  "Golden Boot Projection"
-];
-
-const POINTS_COLUMN = "Total";
-const GOLDEN_BOOT_COLUMN = "Golden Boot Projection";
+// PASTE YOUR PUBLISHED CSV LINK HERE
+const CSV_URL =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vTQPFnmAZG7QiOJTpcCWUSZQbkN90EAJfJQaf8BacjBBRkNzloun10HnMdLBzFWZt-qU4JHZaVb3I80/pub?gid=1567052873&single=true&output=csv";
 
 async function loadLeaderboard() {
-  const res = await fetch(CSV_URL + "&cache=" + new Date().getTime());
-  const text = await res.text();
 
-  const rows = text.trim().split("\n").map(r => r.split(","));
+    const response =
+        await fetch(
+            CSV_URL +
+            "&cache=" +
+            Date.now()
+        );
 
-  let headers = rows[0];
-  let data = rows.slice(1);
+    const text =
+        await response.text();
 
-  // Map allowed column indexes
-  let colIndexMap = {};
-  ALLOWED_COLUMNS.forEach(col => {
-    colIndexMap[col] = headers.indexOf(col);
-  });
+    const rows =
+        text
+        .trim()
+        .split("\n")
+        .map(row => row.split(","));
 
-  const pointsIndex = colIndexMap[POINTS_COLUMN];
-  const gbIndex = colIndexMap[GOLDEN_BOOT_COLUMN];
+    const headers = rows[0];
+    const data = rows.slice(1);
 
-  // Build player objects
-  let players = data.map(row => ({
-    row,
-    points: parseFloat(row[pointsIndex]) || 0
-  }));
+    const nameIndex =
+        headers.indexOf("Name");
 
-  // Sort by Total DESC
-  players.sort((a, b) => b.points - a.points);
+    const totalIndex =
+        headers.indexOf("Total");
 
-  const table = document.getElementById("leaderboard");
+    const goldenBootIndex =
+        headers.indexOf("Golden Boot Projection");
 
-  let html = "<tr>";
+    const tierIndexes = [
+        headers.indexOf("Tier 1"),
+        headers.indexOf("Tier 2"),
+        headers.indexOf("Tier 3"),
+        headers.indexOf("Tier 4"),
+        headers.indexOf("Tier 5"),
+        headers.indexOf("Tier 6")
+    ];
 
-  // Render only allowed headers
-  ALLOWED_COLUMNS.forEach(col => {
-    if (colIndexMap[col] !== -1) {
-      html += `<th>${col}</th>`;
-    }
-  });
+    const players = data.map(row => {
 
-  html += "</tr>";
+        const teams =
+            tierIndexes
+            .map(i => i >= 0 ? row[i] : "")
+            .filter(team => team && team.trim() !== "")
+            .join(", ");
 
-  players.forEach((player, index) => {
-    const row = player.row;
+        return {
+            name: row[nameIndex],
+            teams: teams,
+            total: parseFloat(row[totalIndex]) || 0,
+            goldenBoot: row[goldenBootIndex] || ""
+        };
 
-    let rowClass = index === 0 ? "first-place" : "";
-
-    html += `<tr class="${rowClass}">`;
-
-    ALLOWED_COLUMNS.forEach(col => {
-      const i = colIndexMap[col];
-      if (i === -1) return;
-
-      let cell = row[i] ?? "";
-
-      let cellClass = "";
-      if (col === GOLDEN_BOOT_COLUMN) {
-        cellClass = "golden-boot";
-      }
-
-      html += `<td class="${cellClass}">${cell}</td>`;
     });
 
-    html += "</tr>";
-  });
+    players.sort((a,b) => b.total - a.total);
 
-  table.innerHTML = html;
+    let html = `
+        <tr>
+            <th>Rank</th>
+            <th>Name</th>
+            <th>Teams Picked</th>
+            <th>Total Score</th>
+            <th>Golden Boot</th>
+        </tr>
+    `;
 
-  document.getElementById("refreshText").innerText =
-    "Last updated: " + new Date().toLocaleTimeString();
+    players.forEach((player,index)=>{
+
+        const rowClass =
+            index === 0
+            ? "first-place"
+            : "";
+
+        html += `
+        <tr class="${rowClass}">
+            <td class="rank">
+                ${index + 1}
+            </td>
+
+            <td class="name">
+                ${player.name}
+            </td>
+
+            <td class="teams">
+                ${player.teams}
+            </td>
+
+            <td class="total">
+                ${player.total}
+            </td>
+
+            <td class="goldenboot">
+                ${player.goldenBoot}
+            </td>
+        </tr>
+        `;
+    });
+
+    document
+        .getElementById("leaderboard")
+        .innerHTML = html;
+
+    document
+        .getElementById("updated")
+        .innerHTML =
+        "Last Updated: " +
+        new Date().toLocaleTimeString();
+
 }
 
 loadLeaderboard();
-setInterval(loadLeaderboard, 30000);
+
+setInterval(
+    loadLeaderboard,
+    30000
+);
 
 </script>
 
