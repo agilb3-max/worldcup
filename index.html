@@ -35,16 +35,15 @@ async function loadLeaderboard() {
             else if (i === 1) rankClass = "rank2";
             else if (i === 2) rankClass = "rank3";
 
-            tbody.innerHTML += `
-                <tr class="${rankClass}">
-                    <td>${i + 1}</td>
-                    <td>${entry.name}</td>
-                    <td class="points">${entry.total}</td>
-                    <td class="projection">${entry.projection}</td>
-                    <td>${entry.goals}</td>
-                </tr>
-            `;
-        });
+tbody.innerHTML += `
+<tr>
+    <td>${index + 1}</td>
+    <td>${entry.name}</td>
+    <td>${entry.total}</td>
+    <td>${entry.projection}</td>
+    <td>${entry.goals}</td>
+</tr>
+`;
 
         document.getElementById("updated").innerText =
             "Last Updated: " + new Date().toLocaleString();
