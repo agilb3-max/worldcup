@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Golden Boot Projection Leaderboard</title>
+
+<style>
+body{
+    margin:0;
+    padding:20px;
+    font-family:Arial, sans-serif;
+    background:#0f172a;
+    color:white;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:25px;
+}
+
+.last-updated{
+    text-align:center;
+    opacity:.7;
+    margin-bottom:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    color:#111;
+    border-radius:12px;
+    overflow:hidden;
+}
+
+th{
+    background:#0c4a6e;
+    color:white;
+    padding:14px;
+}
+
+td{
+    padding:12px;
+    text-align:center;
+    border-bottom:1px solid #e5e7eb;
+}
+
+.rank1{
+    background:#fff3b0;
+    font-weight:bold;
+}
+
+.rank2{
+    background:#ececec;
+}
+
+.rank3{
+    background:#f5d0a9;
+}
+
+tr:hover{
+    background:#f8fafc;
+}
+
+.projection{
+    font-weight:bold;
+}
+
+.points{
+    font-size:1.1rem;
+    font-weight:bold;
+}
+
+@media(max-width:768px){
+    table{
+        font-size:14px;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🏆 Golden Boot Projection Challenge</h1>
+
+<div class="last-updated" id="updated">
+Loading...
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Rank</th>
+<th>Name</th>
+<th>Total Points</th>
+<th>Golden Boot Projection</th>
+<th>Projected Goals</th>
+</tr>
+</thead>
+<tbody id="leaderboard"></tbody>
+</table>
+
+</div>
+
+<script>
+
+const CSV_URL = "YOUR_SHEET_CSV_URL";
+
+async function loadLeaderboard(){
+
+    const response = await fetch(CSV_URL);
+    const csv = await response.text();
+
+    const rows = csv.trim().split("\n");
+
+    const headers = rows[0].split(",");
+
+    const nameIndex = headers.indexOf("Name");
+    const totalIndex = headers.indexOf("Total");
+    const projectionIndex = headers.indexOf("Golden Boot Projection");
+    const goalsIndex = headers.indexOf("Projected Goals");
+
+    const data = rows.slice(1).map(row=>{
+        const cols = row.split(",");
+
+        return {
+            name: cols[nameIndex],
+            total: Number(cols[totalIndex]) || 0,
+            projection: cols[projectionIndex],
+            goals: cols[goalsIndex]
+        };
+    });
+
+    data.sort((a,b)=>b.total-a.total);
+
+    const tbody = document.getElementById("leaderboard");
+    tbody.innerHTML="";
+
+    data.forEach((entry,index)=>{
+
+        let rankClass="";
+
+        if(index===0) rankClass="rank1";
+        if(index===1) rankClass="rank2";
+        if(index===2) rankClass="rank3";
+
+        tbody.innerHTML += `
+        <tr class="${rankClass}">
+            <td>${index+1}</td>
+            <td>${entry.name}</td>
+            <td class="points">${entry.total}</td>
+            <td class="projection">${entry.projection}</td>
+            <td>${entry.goals}</td>
+        </tr>
+        `;
+    });
+
+    document.getElementById("updated").innerText =
+        "Last Updated: " + new Date().toLocaleString();
+}
+
+loadLeaderboard();
+
+setInterval(loadLeaderboard,300000);
+
+</script>
+
+</body>
+</html>
