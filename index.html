@@ -1,47 +1,45 @@
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQPFnmAZG7QiOJTpcCWUSZQbkN90EAJfJQaf8BacjBBRkNzloun10HnMdLBzFWZt-qU4JHZaVb3I80/pub?gid=1567052873&single=true&output=csv";
 
+function cleanHeader(h){
+    return h.toLowerCase().trim();
+}
+
 async function loadLeaderboard() {
     const response = await fetch(CSV_URL);
     const csv = await response.text();
 
-    const rows = csv.trim().split("\n");
+    const rows = csv.trim().split("\n").map(r => r.split(","));
 
-    const headers = rows[0].split(",").map(h => h.trim());
+    const headers = rows[0].map(cleanHeader);
 
-    const nameIndex = headers.indexOf("Name");
-    const totalIndex = headers.indexOf("Total");
-    const projectionIndex = headers.indexOf("Golden Boot Projection");
-    const goalsIndex = headers.indexOf("Projected Goals");
+    const nameIndex = headers.indexOf("name");
+    const totalIndex = headers.indexOf("total");
+    const projectionIndex = headers.indexOf("golden boot projection");
+    const goalsIndex = headers.indexOf("projected goals");
 
-    const data = rows.slice(1).map(row => {
-        const cols = row.split(",");
-
-        return {
-            name: cols[nameIndex]?.trim(),
-            total: Number(cols[totalIndex]) || 0,
-            projection: cols[projectionIndex]?.trim() || "",
-            goals: cols[goalsIndex]?.trim() || ""
-        };
-    })
-    .filter(r => r.name && r.name !== "Name");
+    const data = rows.slice(1)
+        .map(row => ({
+            name: row[nameIndex]?.trim(),
+            total: Number(row[totalIndex]) || 0,
+            projection: row[projectionIndex]?.trim() || "",
+            goals: row[goalsIndex]?.trim() || ""
+        }))
+        .filter(r => r.name && r.name !== "Name");
 
     data.sort((a, b) => b.total - a.total);
 
     const tbody = document.getElementById("leaderboard");
     tbody.innerHTML = "";
 
-    data.forEach((entry, index) => {
-        let rankClass = "";
-        if (index === 0) rankClass = "rank1";
-        else if (index === 1) rankClass = "rank2";
-        else if (index === 2) rankClass = "rank3";
+    data.forEach((entry, i) => {
+        let rankClass = i === 0 ? "rank1" : i === 1 ? "rank2" : i === 2 ? "rank3" : "";
 
         tbody.innerHTML += `
             <tr class="${rankClass}">
-                <td>${index + 1}</td>
+                <td>${i + 1}</td>
                 <td>${entry.name}</td>
-                <td class="points">${entry.total}</td>
-                <td class="projection">${entry.projection}</td>
+                <td>${entry.total}</td>
+                <td>${entry.projection}</td>
                 <td>${entry.goals}</td>
             </tr>
         `;
