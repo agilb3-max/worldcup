@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>Leaderboard</title>
+    <title>World Cup Leaderboard</title>
 </head>
 <body>
 
@@ -22,30 +21,27 @@
 </table>
 
 <script>
-
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQPFnmAZG7QiOJTpcCWUSZQbkN90EAJfJQaf8BacjBBRkNzloun10HnMdLBzFWZt-qU4JHZaVb3I80/pub?gid=1567052873&single=true&output=csv";
 
-async function loadLeaderboard() {
+async function load() {
     const res = await fetch(CSV_URL);
-    const csv = await res.text();
+    const text = await res.text();
 
-    const rows = csv.trim().split("\n").map(r => r.split(","));
+    const rows = text.trim().split("\n").map(r => r.split(","));
 
-    const headers = rows[0].map(h => h.toLowerCase().trim());
+    const headers = rows[0].map(h => h.trim().toLowerCase());
 
-    const nameIndex = headers.indexOf("name");
-    const totalIndex = headers.indexOf("total");
-    const projectionIndex = headers.indexOf("golden boot projection");
-    const goalsIndex = headers.indexOf("projected goals");
+    const name = headers.indexOf("name");
+    const total = headers.indexOf("total");
+    const proj = headers.indexOf("golden boot projection");
+    const goals = headers.indexOf("projected goals");
 
-    const data = rows.slice(1)
-        .map(r => ({
-            name: r[nameIndex],
-            total: Number(r[totalIndex]) || 0,
-            projection: r[projectionIndex],
-            goals: r[goalsIndex]
-        }))
-        .filter(r => r.name);
+    const data = rows.slice(1).map(r => ({
+        name: r[name],
+        total: r[total],
+        proj: r[proj],
+        goals: r[goals]
+    })).filter(x => x.name);
 
     data.sort((a,b)=>b.total-a.total);
 
@@ -58,14 +54,13 @@ async function loadLeaderboard() {
             <td>${i+1}</td>
             <td>${d.name}</td>
             <td>${d.total}</td>
-            <td>${d.projection}</td>
+            <td>${d.proj}</td>
             <td>${d.goals}</td>
         </tr>`;
     });
 }
 
-loadLeaderboard();
-
+load();
 </script>
 
 </body>
