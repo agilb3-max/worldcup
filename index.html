@@ -123,8 +123,6 @@ async function loadLeaderboard(){
 
     const rows = csv.trim().split("\n");
 
-    const headers = rows[0].split(",");
-
     const nameIndex = headers.indexOf("Name");
     const totalIndex = headers.indexOf("Total");
     const projectionIndex = headers.indexOf("Golden Boot Projection");
