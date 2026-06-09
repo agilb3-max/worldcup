@@ -129,9 +129,21 @@ async function loadLeaderboard(){
     const totalIndex = headers.indexOf("Total");
     const projectionIndex = headers.indexOf("Golden Boot Projection");
     const goalsIndex = headers.indexOf("Projected Goals");
+    const headers = rows[0].split(",");
+    console.log(headers);
 
-    const data = rows.slice(1).map(row=>{
+   const data = rows.slice(1)
+    .map(row => {
         const cols = row.split(",");
+
+        return {
+            name: cols[nameIndex]?.trim(),
+            total: Number(cols[totalIndex]) || 0,
+            projection: cols[projectionIndex]?.trim(),
+            goals: cols[goalsIndex]?.trim()
+        };
+    })
+    .filter(entry => entry.name);
 
         return {
             name: cols[nameIndex],
