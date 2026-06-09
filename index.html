@@ -1,16 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Leaderboard</title>
+</head>
+<body>
+
+<h2>Loading Leaderboard...</h2>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Rank</th>
+            <th>Name</th>
+            <th>Total</th>
+            <th>Projection</th>
+            <th>Goals</th>
+        </tr>
+    </thead>
+    <tbody id="leaderboard"></tbody>
+</table>
+
+<script>
+
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQPFnmAZG7QiOJTpcCWUSZQbkN90EAJfJQaf8BacjBBRkNzloun10HnMdLBzFWZt-qU4JHZaVb3I80/pub?gid=1567052873&single=true&output=csv";
 
-function cleanHeader(h){
-    return h.toLowerCase().trim();
-}
-
 async function loadLeaderboard() {
-    const response = await fetch(CSV_URL);
-    const csv = await response.text();
+    const res = await fetch(CSV_URL);
+    const csv = await res.text();
 
     const rows = csv.trim().split("\n").map(r => r.split(","));
 
-    const headers = rows[0].map(cleanHeader);
+    const headers = rows[0].map(h => h.toLowerCase().trim());
 
     const nameIndex = headers.indexOf("name");
     const totalIndex = headers.indexOf("total");
@@ -18,36 +39,34 @@ async function loadLeaderboard() {
     const goalsIndex = headers.indexOf("projected goals");
 
     const data = rows.slice(1)
-        .map(row => ({
-            name: row[nameIndex]?.trim(),
-            total: Number(row[totalIndex]) || 0,
-            projection: row[projectionIndex]?.trim() || "",
-            goals: row[goalsIndex]?.trim() || ""
+        .map(r => ({
+            name: r[nameIndex],
+            total: Number(r[totalIndex]) || 0,
+            projection: r[projectionIndex],
+            goals: r[goalsIndex]
         }))
-        .filter(r => r.name && r.name !== "Name");
+        .filter(r => r.name);
 
-    data.sort((a, b) => b.total - a.total);
+    data.sort((a,b)=>b.total-a.total);
 
     const tbody = document.getElementById("leaderboard");
     tbody.innerHTML = "";
 
-    data.forEach((entry, i) => {
-        let rankClass = i === 0 ? "rank1" : i === 1 ? "rank2" : i === 2 ? "rank3" : "";
-
+    data.forEach((d,i)=>{
         tbody.innerHTML += `
-            <tr class="${rankClass}">
-                <td>${i + 1}</td>
-                <td>${entry.name}</td>
-                <td>${entry.total}</td>
-                <td>${entry.projection}</td>
-                <td>${entry.goals}</td>
-            </tr>
-        `;
+        <tr>
+            <td>${i+1}</td>
+            <td>${d.name}</td>
+            <td>${d.total}</td>
+            <td>${d.projection}</td>
+            <td>${d.goals}</td>
+        </tr>`;
     });
-
-    document.getElementById("updated").innerText =
-        "Last Updated: " + new Date().toLocaleString();
 }
 
 loadLeaderboard();
-setInterval(loadLeaderboard, 300000);
+
+</script>
+
+</body>
+</html>
