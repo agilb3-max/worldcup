@@ -20,6 +20,13 @@
     margin-bottom: 10px;
   }
 
+  .refresh {
+    text-align: center;
+    font-size: 12px;
+    opacity: 0.7;
+    margin-bottom: 10px;
+  }
+
   .table-container {
     overflow-x: auto;
   }
@@ -27,7 +34,7 @@
   table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px;
+    min-width: 500px;
     background: #111827;
     border-radius: 10px;
     overflow: hidden;
@@ -50,24 +57,15 @@
     background: #1f2937;
   }
 
-  /* 🥇 1st place highlight */
   .first-place {
     background: linear-gradient(90deg, #facc15, #f59e0b);
     color: black;
     font-weight: bold;
   }
 
-  /* Golden Boot column styling */
   .golden-boot {
     font-weight: bold;
     color: #facc15;
-  }
-
-  .refresh {
-    text-align: center;
-    font-size: 12px;
-    opacity: 0.7;
-    margin-bottom: 10px;
   }
 
   @media (max-width: 600px) {
@@ -89,9 +87,18 @@
 </div>
 
 <script>
+
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTQPFnmAZG7QiOJTpcCWUSZQbkN90EAJfJQaf8BacjBBRkNzloun10HnMdLBzFWZt-qU4JHZaVb3I80/pub?gid=1567052873&single=true&output=csv";
-const POINTS_COLUMN_NAME = "Total"; // <-- change if your column is named differently
-const GOLDEN_BOOT_COLUMN = "Golden Boot Projection"; // optional
+
+// 🔥 Only show these columns (customize if needed)
+const ALLOWED_COLUMNS = [
+  "Name",
+  "Total",
+  "Golden Boot Projection"
+];
+
+const POINTS_COLUMN = "Total";
+const GOLDEN_BOOT_COLUMN = "Golden Boot Projection";
 
 async function loadLeaderboard() {
   const res = await fetch(CSV_URL + "&cache=" + new Date().getTime());
@@ -102,25 +109,33 @@ async function loadLeaderboard() {
   let headers = rows[0];
   let data = rows.slice(1);
 
-  // Find points column index
-  const pointsIndex = headers.indexOf(POINTS_COLUMN_NAME);
-  const gbIndex = headers.indexOf(GOLDEN_BOOT_COLUMN);
+  // Map allowed column indexes
+  let colIndexMap = {};
+  ALLOWED_COLUMNS.forEach(col => {
+    colIndexMap[col] = headers.indexOf(col);
+  });
 
-  // Convert rows to objects
+  const pointsIndex = colIndexMap[POINTS_COLUMN];
+  const gbIndex = colIndexMap[GOLDEN_BOOT_COLUMN];
+
+  // Build player objects
   let players = data.map(row => ({
     row,
     points: parseFloat(row[pointsIndex]) || 0
   }));
 
-  // Sort by points DESC
+  // Sort by Total DESC
   players.sort((a, b) => b.points - a.points);
 
   const table = document.getElementById("leaderboard");
 
   let html = "<tr>";
 
-  headers.forEach(h => {
-    html += `<th>${h}</th>`;
+  // Render only allowed headers
+  ALLOWED_COLUMNS.forEach(col => {
+    if (colIndexMap[col] !== -1) {
+      html += `<th>${col}</th>`;
+    }
   });
 
   html += "</tr>";
@@ -132,10 +147,14 @@ async function loadLeaderboard() {
 
     html += `<tr class="${rowClass}">`;
 
-    row.forEach((cell, i) => {
-      let cellClass = "";
+    ALLOWED_COLUMNS.forEach(col => {
+      const i = colIndexMap[col];
+      if (i === -1) return;
 
-      if (i === gbIndex && gbIndex !== -1) {
+      let cell = row[i] ?? "";
+
+      let cellClass = "";
+      if (col === GOLDEN_BOOT_COLUMN) {
         cellClass = "golden-boot";
       }
 
@@ -151,11 +170,9 @@ async function loadLeaderboard() {
     "Last updated: " + new Date().toLocaleTimeString();
 }
 
-// Initial load
 loadLeaderboard();
-
-// Auto refresh every 30 seconds
 setInterval(loadLeaderboard, 30000);
+
 </script>
 
 </body>
