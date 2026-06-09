@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Golden Boot Projection Leaderboard</title>
+<title>World Cup Pool Leaderboard</title>
 
 <style>
 body{
@@ -123,12 +123,13 @@ async function loadLeaderboard(){
 
     const rows = csv.trim().split("\n");
 
-    const nameIndex = headers.indexOf("Name");
-    const totalIndex = headers.indexOf("Total");
-    const projectionIndex = headers.indexOf("Golden Boot Projection");
-    const goalsIndex = headers.indexOf("Projected Goals");
-    const headers = rows[0].split(",");
-    console.log(headers);
+const headers = rows[0].split(",");
+console.log(headers);
+
+const nameIndex = headers.indexOf("Name");
+const totalIndex = headers.indexOf("Total");
+const projectionIndex = headers.indexOf("Golden Boot Projection");
+const goalsIndex = headers.indexOf("Projected Goals");
 
    const data = rows.slice(1)
     .map(row => {
