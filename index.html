@@ -8,12 +8,11 @@ async function loadLeaderboard() {
         const rows = csv.trim().split("\n").map(r => r.split(","));
 
         const headers = rows[0].map(h => h.trim());
-        console.log("HEADERS:", headers);
 
         const nameIndex = headers.indexOf("Name");
         const totalIndex = headers.indexOf("Total");
         const projectionIndex = headers.indexOf("Golden Boot Projection");
-        const goalsIndex = headers.indexOf("Projected Goals");
+        const goalsIndex = headers.findIndex(h => h.toLowerCase().includes("projected"));
 
         const data = rows.slice(1)
             .map(row => ({
@@ -22,7 +21,7 @@ async function loadLeaderboard() {
                 projection: row[projectionIndex]?.trim() || "",
                 goals: row[goalsIndex]?.trim() || ""
             }))
-            .filter(p => p.name);
+            .filter(r => r.name && r.name !== "Name");
 
         data.sort((a, b) => b.total - a.total);
 
@@ -35,21 +34,22 @@ async function loadLeaderboard() {
             else if (i === 1) rankClass = "rank2";
             else if (i === 2) rankClass = "rank3";
 
-tbody.innerHTML += `
-<tr>
-    <td>${index + 1}</td>
-    <td>${entry.name}</td>
-    <td>${entry.total}</td>
-    <td>${entry.projection}</td>
-    <td>${entry.goals}</td>
-</tr>
-`;
+            tbody.innerHTML += `
+                <tr class="${rankClass}">
+                    <td>${i + 1}</td>
+                    <td>${entry.name}</td>
+                    <td class="points">${entry.total}</td>
+                    <td class="projection">${entry.projection}</td>
+                    <td>${entry.goals}</td>
+                </tr>
+            `;
+        });
 
         document.getElementById("updated").innerText =
             "Last Updated: " + new Date().toLocaleString();
 
     } catch (err) {
-        console.error("ERROR:", err);
+        console.error(err);
         document.getElementById("updated").innerText =
             "Error loading leaderboard (check console)";
     }
