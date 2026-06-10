@@ -931,28 +931,7 @@ function renderFunCards(players, C) {
   `;
   row.appendChild(battleCard);
 
-  // Card 4: Golden Boot Race
-  const gbData = players.filter(p => p[C.gbPick] && p[C.gbPick].trim()).map(p => ({
-    player: p[C.name],
-    pick: p[C.gbPick],
-    goals: parseFloat(p[C.gbGoals]) || 0
-  })).sort((a,b)=>b.goals-a.goals).slice(0,4);
-
-  const gbCard = document.createElement('div');
-  gbCard.className = 'fun-card';
-  gbCard.innerHTML = `
-    <div class="fun-card-label">👟 Golden Boot Race</div>
-    ${gbData.map((d,i) => `
-      <div class="bar-row">
-        <div class="bar-label">${d.pick}</div>
-        <div class="bar-track"><div class="bar-fill" style="width:${gbData[0].goals > 0 ? (d.goals/gbData[0].goals*100).toFixed(0) : 0}%; background: linear-gradient(to right, #7c3aed, #a78bfa)"></div></div>
-        <div class="bar-count" style="color:#a78bfa">${d.goals}</div>
-      </div>
-    `).join('')}
-  `;
-  row.appendChild(gbCard);
-
-  // Card 5: Simulated Odds (fun)
+  // Card 4: Simulated Odds (fun)
   const oddsCard = document.createElement('div');
   oddsCard.className = 'fun-card';
   const topFive = players.slice(0, Math.min(5, players.length));
