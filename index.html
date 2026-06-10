@@ -913,7 +913,6 @@ function renderFunCards(players, C) {
   row.appendChild(projCard);
 
   // Card 3: The Chaser
-  const leader = players[0];
   const chaser = players[1];
   const deficit = leader._total - (chaser?._total || 0);
   const chaserCard = document.createElement('div');
