@@ -912,24 +912,22 @@ function renderFunCards(players, C) {
   `;
   row.appendChild(projCard);
 
-  // Card 3: Tightest battle
-  let closestGap = Infinity, closestPair = [0,1];
-  for (let i = 0; i < players.length-1; i++) {
-    const gap = players[i]._total - players[i+1]._total;
-    if (gap < closestGap && gap >= 0) { closestGap = gap; closestPair = [i, i+1]; }
-  }
-  const battleCard = document.createElement('div');
-  battleCard.className = 'fun-card';
-  battleCard.innerHTML = `
-    <div class="fun-card-label">⚔️ Closest Battle</div>
-    <div class="fun-card-main">${firstName(players[closestPair[0]][C.name])} vs ${firstName(players[closestPair[1]][C.name])}</div>
-    <div class="fun-card-sub">Only ${closestGap} point${closestGap===1?'':'s'} apart!</div>
+  // Card 3: The Chaser
+  const leader = players[0];
+  const chaser = players[1];
+  const deficit = leader._total - (chaser?._total || 0);
+  const chaserCard = document.createElement('div');
+  chaserCard.className = 'fun-card';
+  chaserCard.innerHTML = `
+    <div class="fun-card-label">🏃 The Chaser</div>
+    <div class="fun-card-main">${chaser ? chaser[C.name] : '—'}</div>
+    <div class="fun-card-sub" style="margin-top:4px">Needs <strong style="color:var(--red); font-size:18px">${deficit}</strong> point${deficit===1?'':'s'} to overtake</div>
     <div class="fun-card-sub" style="margin-top:6px">
-      ${players[closestPair[0]][C.name]}: <strong style="color:var(--gold)">${players[closestPair[0]]._total}</strong> &nbsp;vs&nbsp;
-      ${players[closestPair[1]][C.name]}: <strong style="color:var(--gold)">${players[closestPair[1]]._total}</strong>
+      👑 ${firstName(leader[C.name])}: <strong style="color:var(--gold)">${leader._total}</strong> &nbsp;·&nbsp;
+      🏃 ${firstName(chaser?.[C.name] || '—')}: <strong style="color:var(--silver)">${chaser?._total || 0}</strong>
     </div>
   `;
-  row.appendChild(battleCard);
+  row.appendChild(chaserCard);
 
   // Card 4: Simulated Odds (fun)
   const oddsCard = document.createElement('div');
